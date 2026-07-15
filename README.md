@@ -20,7 +20,7 @@ como teste técnico para a vaga de Desenvolvedor Júnior (Java + Vue.js).
 
 ## Pré-requisitos
 
-- Java 21+ (desenvolvido com Java 25)
+- Java 25 (Temurin) — versão usada no desenvolvimento e configurada no projeto
 - Node.js 18+
 - MySQL rodando em `localhost:3306`
 
