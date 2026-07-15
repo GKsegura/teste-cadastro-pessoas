@@ -28,13 +28,11 @@ como teste técnico para a vaga de Desenvolvedor Júnior (Java + Vue.js).
 
 ### 1. Backend
 
-Ajuste usuário e senha do MySQL em `src/main/resources/application.properties`
-(o database `cadastro_pessoas` é criado automaticamente na primeira execução):
-
-```properties
-spring.datasource.username=root
-spring.datasource.password=SUA_SENHA
-```
+O `application.properties` já vem configurado com as credenciais padrão de
+desenvolvimento (`root`/`root`) - ajuste em
+`src/main/resources/application.properties` apenas se as suas credenciais
+locais do MySQL forem diferentes. O database `cadastro_pessoas` é criado
+automaticamente na primeira execução.
 
 Na raiz do projeto:
 
