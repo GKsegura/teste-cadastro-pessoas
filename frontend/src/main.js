@@ -1,8 +1,16 @@
 import { createApp } from 'vue'
 import Toast from 'vue-toastification'
 import 'vue-toastification/dist/index.css'
+
 import App from './App.vue'
 
+import '@/assets/css/styles.css'
+
 const app = createApp(App)
-app.use(Toast, { position: 'bottom-right', timeout: 3000 })
+
+app.use(Toast, {
+    position: 'bottom-right',
+    timeout: 3000
+})
+
 app.mount('#app')
