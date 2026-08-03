@@ -40,8 +40,8 @@ Na raiz do projeto:
 ./mvnw spring-boot:run
 ```
 
-A API sobe em `http://localhost:8080`.
-Documentação interativa (Swagger): **http://localhost:8080/swagger-ui.html**
+A API sobe em `http://localhost:8081`.
+Documentação interativa (Swagger): **http://localhost:8081/swagger-ui.html**
 
 ### 2. Frontend
 
@@ -51,15 +51,16 @@ npm install
 npm run dev
 ```
 
-A aplicação abre em `http://localhost:5173`.
+A aplicação abre em `http://localhost:5174`.
 
 ## Endpoints
 
-| Método | Rota            | Descrição           | Sucesso | Erros                |
-| ------ | --------------- | ------------------- | ------- | -------------------- |
-| POST   | `/pessoas`      | Cadastra uma pessoa | 201     | 400 (validação)      |
-| GET    | `/pessoas`      | Lista as pessoas    | 200     | -                    |
-| DELETE | `/pessoas/{id}` | Exclui uma pessoa   | 204     | 404 (id inexistente) |
+| Método | Rota            | Descrição           | Sucesso | Erros                                  |
+| ------ | --------------- | ------------------- | ------- | --------------------------------------- |
+| POST   | `/pessoas`      | Cadastra uma pessoa | 201     | 400 (validação)                        |
+| GET    | `/pessoas`      | Lista as pessoas    | 200     | -                                       |
+| PUT    | `/pessoas/{id}` | Atualiza uma pessoa | 200     | 400 (validação), 404 (id inexistente)  |
+| DELETE | `/pessoas/{id}` | Exclui uma pessoa   | 204     | 404 (id inexistente)                   |
 
 ![Documentação Swagger](docs/swagger.png)
 
@@ -74,6 +75,7 @@ mensagem clara - ambos tratados por um handler global (`@RestControllerAdvice`).
 
 - ✅ Cadastrar pessoa (com validação em duas camadas: frontend e backend)
 - ✅ Listar pessoas cadastradas
+- ✅ Editar pessoa cadastrada
 - ✅ Excluir pessoa com confirmação prévia
 - ✅ Mensagem de sucesso no cadastro (toast)
 - ✅ Feedback de erro com as mensagens reais da API (toast)
@@ -95,19 +97,20 @@ mensagem clara - ambos tratados por um handler global (`@RestControllerAdvice`).
 - **vue-toastification para os toasts**: avaliei implementar manualmente
   (ref + v-if + setTimeout) e optei pela biblioteca por maturidade
   (empilhamento, acessibilidade, pausa no hover).
-- **Componente único no frontend**: pela escala do desafio (uma tela);
-  em um app maior, extrairia `PessoaForm` e `PessoaTabela` comunicando
-  por props/emits.
+- **Componentização do frontend** (`PessoaForm` / `PessoaTable` comunicando
+  por props/emits): inicialmente era um componente único, dado o escopo de
+  uma tela só. Alterado para componentização após feedback do tech lead do
+  time de produtos.
 - **Identidade visual**: paleta baseada nas cores da Nexum
   (teal `#00C6B9` e grafite `#424141`).
 
 ## Possíveis evoluções
 
-- Edição de registros (`PUT /pessoas/{id}`)
+- ~~Edição de registros (`PUT /pessoas/{id}`)~~ — feito em 31/07/2026
 - Testes unitários no service (JUnit + Mockito)
 - Paginação na listagem
-- Componentização do frontend (PessoaForm / PessoaTabela)
-- Modal de confirmação customizado no lugar do `confirm()` nativo
+- ~~Componentização do frontend (PessoaForm / PessoaTabela)~~ — feito em 29/07/2026
+- ~~Modal de confirmação customizado no lugar do `confirm()` nativo~~ — feito em 30/07/2026
 
 ---
 
