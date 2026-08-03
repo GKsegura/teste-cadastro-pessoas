@@ -32,6 +32,16 @@ public class PessoaService {
                 .toList();
     }
 
+    public PessoaResponseDTO atualizar(Long id, PessoaRequestDTO dto) {
+        Pessoa pessoa = repository.findById(id)
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Pessoa com id " + id + " não encontrada"));
+        pessoa.setNome(dto.nome());
+        pessoa.setEmail(dto.email());
+        pessoa.setIdade(dto.idade());
+        Pessoa atualizada = repository.save(pessoa);
+        return PessoaResponseDTO.fromEntity(atualizada);
+    }
+
     public void excluir(Long id) {
         if (!repository.existsById(id)) {
             throw new RecursoNaoEncontradoException("Pessoa com id " + id + " não encontrada");
