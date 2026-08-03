@@ -1,58 +1,55 @@
 <script setup>
+import Button from 'primevue/button'
+import Column from 'primevue/column'
+import ConfirmDialog from 'primevue/confirmdialog'
+import DataTable from 'primevue/datatable'
+import { useConfirm } from 'primevue/useconfirm'
 
 defineProps({
-    pessoas: Array
+    pessoas: Array,
+    carregando: Boolean
 })
 
-const emit = defineEmits(['excluir'])
+const emit = defineEmits(['excluir', 'editar'])
 
+const confirm = useConfirm()
+
+function confirmarExclusao(pessoa) {
+    confirm.require({
+        message: `Tem certeza que deseja excluir "${pessoa.nome}"?`,
+        header: 'Confirmar exclusão',
+        icon: 'pi pi-exclamation-triangle',
+        acceptLabel: 'Excluir',
+        rejectLabel: 'Cancelar',
+        acceptProps: { severity: 'danger' },
+        accept: () => emit('excluir', pessoa.id)
+    })
+}
 </script>
 
 <template>
 
-    <table class="tabela">
+    <DataTable :value="pessoas" :loading="carregando" class="tabela">
 
-        <thead>
+        <template #empty>
+            <p class="vazio">Nenhuma pessoa cadastrada ainda.</p>
+        </template>
 
-            <tr>
+        <Column field="nome" header="Nome" />
+        <Column field="email" header="E-mail" />
+        <Column field="idade" header="Idade" />
 
-                <th>Nome</th>
-                <th>E-mail</th>
-                <th>Idade</th>
-                <th>Ações</th>
+        <Column header="Ações">
+            <template #body="{ data }">
+                <Button label="Excluir" severity="danger" outlined size="small" class="ml-2"
+                    @click="confirmarExclusao(data)" />
+                <Button label="Editar" severity="warning" outlined size="small" class="ml-2"
+                    @click="$emit('editar', data)" />
+            </template>
+        </Column>
 
-            </tr>
+    </DataTable>
 
-        </thead>
-
-        <tbody>
-
-            <tr v-for="pessoa in pessoas" :key="pessoa.id">
-
-                <td>{{ pessoa.nome }}</td>
-                <td>{{ pessoa.email }}</td>
-                <td>{{ pessoa.idade }}</td>
-
-                <td>
-
-                    <button class="btn-excluir" @click="emit('excluir', pessoa.id)">
-
-                        Excluir
-
-                    </button>
-
-                </td>
-
-            </tr>
-
-        </tbody>
-
-    </table>
-
-    <p v-if="pessoas.length === 0" class="vazio">
-
-        Nenhuma pessoa cadastrada ainda.
-
-    </p>
+    <ConfirmDialog />
 
 </template>

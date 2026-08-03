@@ -1,24 +1,54 @@
 <script setup>
-import { ref } from 'vue'
+import { reactive, ref, watch } from 'vue'
+import InputText from 'primevue/inputtext'
+import InputNumber from 'primevue/inputnumber'
+import Button from 'primevue/button'
 
-const emit = defineEmits(['cadastrar'])
+const props = defineProps({
+    pessoaEmEdicao: {
+        type: Object,
+        default: null
+    }
+})
 
-const nome = ref('')
-const email = ref('')
-const idade = ref('')
+const emit = defineEmits(['cadastrar', 'atualizar', 'cancelar-edicao'])
+
+const form = reactive({
+    nome: '',
+    email: '',
+    idade: null
+})
+
+const tentouSalvar = ref(false)
+
+watch(() => props.pessoaEmEdicao, (pessoa) => {
+    Object.assign(form, pessoa
+        ? { nome: pessoa.nome, email: pessoa.email, idade: pessoa.idade }
+        : { nome: '', email: '', idade: null })
+    tentouSalvar.value = false
+})
+
+function formularioValido() {
+    return form.nome && form.email && form.idade
+}
 
 function salvar() {
+    tentouSalvar.value = true
 
-    emit('cadastrar', {
-        nome: nome.value,
-        email: email.value,
-        idade: idade.value
-    })
+    if (!formularioValido())
+        return
 
-    nome.value = ''
-    email.value = ''
-    idade.value = ''
+    if (props.pessoaEmEdicao)
+        emit('atualizar', props.pessoaEmEdicao.id, { ...form })
+    else
+        emit('cadastrar', { ...form })
 
+    Object.assign(form, { nome: '', email: '', idade: null })
+    tentouSalvar.value = false
+}
+
+function cancelar() {
+    emit('cancelar-edicao')
 }
 </script>
 
@@ -26,15 +56,23 @@ function salvar() {
 
     <form class="formulario" @submit.prevent="salvar">
 
-        <input v-model="nome" placeholder="Nome">
+        <div class="campo">
+            <InputText v-model="form.nome" placeholder="Nome" :invalid="tentouSalvar && !form.nome" />
+            <small v-if="tentouSalvar && !form.nome" class="erro-campo">Nome é obrigatório</small>
+        </div>
 
-        <input v-model="email" type="email" placeholder="E-mail">
+        <div class="campo">
+            <InputText v-model="form.email" type="email" placeholder="E-mail" :invalid="tentouSalvar && !form.email" />
+            <small v-if="tentouSalvar && !form.email" class="erro-campo">E-mail é obrigatório</small>
+        </div>
 
-        <input v-model.number="idade" type="number" placeholder="Idade">
+        <div class="campo">
+            <InputNumber v-model="form.idade" placeholder="Idade" :min="0" :invalid="tentouSalvar && !form.idade" />
+            <small v-if="tentouSalvar && !form.idade" class="erro-campo">Idade é obrigatória</small>
+        </div>
 
-        <button>
-            Cadastrar
-        </button>
+        <Button type="submit" :label="pessoaEmEdicao ? 'Salvar' : 'Cadastrar'" />
+        <Button v-if="pessoaEmEdicao" type="button" label="Cancelar" severity="secondary" outlined @click="cancelar" />
 
     </form>
 

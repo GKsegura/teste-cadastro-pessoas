@@ -7,6 +7,7 @@ import PessoaForm from '@/components/PessoaForm.vue'
 import PessoaTable from '@/components/PessoaTable.vue'
 
 import {
+    atualizarPessoa,
     cadastrarPessoa,
     excluirPessoa,
     listarPessoas
@@ -15,30 +16,48 @@ import {
 const toast = useToast()
 
 const pessoas = ref([])
+const carregando = ref(false)
+const pessoaEmEdicao = ref(null)
+
+function tratarErro(erro, mensagemPadrao) {
+    if (erro.response?.status === 400) {
+        const mensagens = Object.values(erro.response.data).join(' | ')
+        toast.error(mensagens)
+    } else {
+        toast.error(mensagemPadrao)
+    }
+}
 
 async function cadastrar(dados) {
     try {
         await cadastrarPessoa(dados)
-
         toast.success('Pessoa cadastrada com sucesso!')
         await carregarPessoas()
-
     } catch (erro) {
-
-        if (erro.response?.status === 400) {
-            const mensagens = Object.values(erro.response.data).join(' | ')
-            toast.error(mensagens)
-        } else {
-            toast.error('Erro ao cadastrar pessoa')
-        }
-
+        tratarErro(erro, 'Erro ao cadastrar pessoa')
     }
 }
 
-async function excluir(id) {
+async function atualizar(id, dados) {
+    try {
+        await atualizarPessoa(id, dados)
+        toast.success('Pessoa atualizada com sucesso!')
+        pessoaEmEdicao.value = null
+        await carregarPessoas()
+    } catch (erro) {
+        tratarErro(erro, 'Erro ao atualizar pessoa')
+    }
+}
 
-    if (!confirm('Tem certeza que deseja excluir esta pessoa?'))
-        return
+function editar(pessoa) {
+    pessoaEmEdicao.value = pessoa
+}
+
+function cancelarEdicao() {
+    pessoaEmEdicao.value = null
+}
+
+async function excluir(id) {
 
     try {
 
@@ -58,6 +77,8 @@ async function excluir(id) {
 
 async function carregarPessoas() {
 
+    carregando.value = true
+
     try {
 
         const resposta = await listarPessoas()
@@ -67,6 +88,10 @@ async function carregarPessoas() {
     } catch {
 
         toast.error('Erro ao carregar pessoas')
+
+    } finally {
+
+        carregando.value = false
 
     }
 
@@ -80,9 +105,14 @@ onMounted(carregarPessoas)
 
         <h1>Cadastro de Pessoas</h1>
 
-        <PessoaForm @cadastrar="cadastrar" />
+        <PessoaForm
+            :pessoa-em-edicao="pessoaEmEdicao"
+            @cadastrar="cadastrar"
+            @atualizar="atualizar"
+            @cancelar-edicao="cancelarEdicao"
+        />
 
-        <PessoaTable :pessoas="pessoas" @excluir="excluir" />
+        <PessoaTable :pessoas="pessoas" :carregando="carregando" @excluir="excluir" @editar="editar" />
 
         <AppFooter />
 

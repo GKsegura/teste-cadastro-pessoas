@@ -1,7 +1,7 @@
 import axios from 'axios'
 
 const api = axios.create({
-    baseURL: 'http://localhost:8080'
+    baseURL: import.meta.env.VITE_API_URL
 })
 
 export function listarPessoas() {
@@ -14,4 +14,8 @@ export function cadastrarPessoa(pessoa) {
 
 export function excluirPessoa(id) {
     return api.delete(`/pessoas/${id}`)
+}
+
+export function atualizarPessoa(id, pessoa) {
+    return api.put(`/pessoas/${id}`, pessoa)
 }
