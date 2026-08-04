@@ -15,7 +15,8 @@ como teste técnico para a vaga de Desenvolvedor Júnior (Java + Vue.js).
 
 **Frontend**
 
-- Vue 3 (Composition API) · Vite
+- Vue 3 (Composition API) · Vite · Vue Router
+- Bootstrap 5
 - Axios · vue-toastification
 
 ## Pré-requisitos
@@ -55,19 +56,25 @@ A aplicação abre em `http://localhost:5174`.
 
 ## Endpoints
 
-| Método | Rota            | Descrição           | Sucesso | Erros                                  |
-| ------ | --------------- | ------------------- | ------- | --------------------------------------- |
-| POST   | `/pessoas`      | Cadastra uma pessoa | 201     | 400 (validação)                        |
-| GET    | `/pessoas`      | Lista as pessoas    | 200     | -                                       |
-| PUT    | `/pessoas/{id}` | Atualiza uma pessoa | 200     | 400 (validação), 404 (id inexistente)  |
-| DELETE | `/pessoas/{id}` | Exclui uma pessoa   | 204     | 404 (id inexistente)                   |
+| Método | Rota            | Descrição            | Sucesso | Erros                                                    |
+| ------ | --------------- | --------------------- | ------- | --------------------------------------------------------- |
+| POST   | `/pessoas`      | Cadastra uma pessoa   | 201     | 400 (validação), 409 (CPF/CNPJ já cadastrado)            |
+| GET    | `/pessoas`      | Lista as pessoas      | 200     | -                                                          |
+| GET    | `/pessoas/{id}` | Busca uma pessoa      | 200     | 404 (id inexistente)                                       |
+| PUT    | `/pessoas/{id}` | Atualiza uma pessoa   | 200     | 400 (validação), 404 (id inexistente), 409 (CPF/CNPJ já cadastrado) |
+| DELETE | `/pessoas/{id}` | Exclui uma pessoa     | 204     | 404 (id inexistente)                                       |
 
 ![Documentação Swagger](docs/swagger.png)
 
-Validações (Bean Validation no DTO): nome obrigatório, e-mail obrigatório e
-válido, idade obrigatória e maior que zero. Erros de validação retornam
-`400` com um mapa `campo → mensagem`; id inexistente retorna `404` com
-mensagem clara - ambos tratados por um handler global (`@RestControllerAdvice`).
+Campos da pessoa: **Nome Completo**, **CPF/CNPJ**, **Telefone**, **E-mail**.
+
+Validações (Bean Validation no DTO): todos os campos são obrigatórios; e-mail
+precisa ser válido; telefone precisa seguir o formato `(00) 00000-0000` ou
+`(00) 0000-0000`; CPF/CNPJ é validado por um `ConstraintValidator` customizado
+que confere o dígito verificador (mesmo algoritmo usado pela Receita Federal)
+e não aceita duplicidade. Erros de validação retornam `400` com um mapa
+`campo → mensagem`; id inexistente retorna `404`; CPF/CNPJ duplicado retorna
+`409` - todos tratados por um handler global (`@RestControllerAdvice`).
 
 ![Validação de ponta a ponta](docs/validacao.png)
 
@@ -102,15 +109,34 @@ mensagem clara - ambos tratados por um handler global (`@RestControllerAdvice`).
   uma tela só. Alterado para componentização após feedback do tech lead do
   time de produtos.
 - **Identidade visual**: paleta baseada nas cores da Nexum
-  (teal `#00C6B9` e grafite `#424141`).
+  (teal `#00C6B9` e grafite `#424141`), aplicada sobre os componentes padrão
+  do Bootstrap.
+- **Bootstrap em vez de uma lib de componentes (PrimeVue)**: o enunciado
+  completo do desafio marca Bootstrap como estilização obrigatória; a versão
+  inicial do projeto tinha sido feita a partir de um resumo do desafio que
+  não trazia esse requisito. O formulário, a tabela e o modal de confirmação
+  foram reescritos com markup e classes nativas do Bootstrap 5
+  (`bootstrap.Modal` controlado via `<script setup>` para o modal de
+  exclusão).
+- **Validador customizado de CPF/CNPJ** (`@CpfOuCnpj`, em
+  `validations/`): Bean Validation não tem suporte nativo a documentos
+  brasileiros. O validador identifica CPF (11 dígitos) ou CNPJ (14 dígitos)
+  pelo tamanho e confere o dígito verificador de cada um. Duplicidade é
+  checada à parte no service (`existsByCpfCnpj`), retornando `409` em vez de
+  deixar a constraint `unique` do banco estourar um erro `500`.
+- **Rotas dedicadas para listagem/cadastro/edição** (Vue Router: `/`,
+  `/pessoas/novo`, `/pessoas/:id/editar`): o desafio pede redirecionamento
+  para a listagem após salvar - modelar isso como navegação de URL (em vez de
+  alternar componentes na mesma tela) é mais fiel ao requisito e permite
+  acessar a edição de uma pessoa diretamente pela URL (usa
+  `GET /pessoas/{id}` para carregar os dados nesse caso).
 
 ## Possíveis evoluções
 
-- ~~Edição de registros (`PUT /pessoas/{id}`)~~ — feito em 31/07/2026
 - Testes unitários no service (JUnit + Mockito)
-- Paginação na listagem
-- ~~Componentização do frontend (PessoaForm / PessoaTabela)~~ — feito em 29/07/2026
-- ~~Modal de confirmação customizado no lugar do `confirm()` nativo~~ — feito em 30/07/2026
+- Busca por nome/CPF e paginação na listagem
+- Máscara de CPF/CNPJ e telefone com uma lib dedicada (hoje é formatação
+  manual em `utils/mascaras.js`)
 
 ---
 
