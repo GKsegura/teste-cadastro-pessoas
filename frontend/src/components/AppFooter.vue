@@ -1,6 +1,6 @@
 <template>
 
-    <footer class="assinatura">
+    <footer class="assinatura text-center text-muted mt-5 pt-3 border-top">
 
         Desenvolvido por
 

@@ -1,8 +1,7 @@
 <script setup>
 import { reactive, ref, watch } from 'vue'
-import InputText from 'primevue/inputtext'
-import InputNumber from 'primevue/inputnumber'
-import Button from 'primevue/button'
+
+import { formatarCpfCnpj, formatarTelefone } from '@/utils/mascaras'
 
 const props = defineProps({
     pessoaEmEdicao: {
@@ -11,25 +10,34 @@ const props = defineProps({
     }
 })
 
-const emit = defineEmits(['cadastrar', 'atualizar', 'cancelar-edicao'])
+const emit = defineEmits(['cadastrar', 'atualizar', 'cancelar'])
 
 const form = reactive({
     nome: '',
-    email: '',
-    idade: null
+    cpfCnpj: '',
+    telefone: '',
+    email: ''
 })
 
 const tentouSalvar = ref(false)
 
 watch(() => props.pessoaEmEdicao, (pessoa) => {
     Object.assign(form, pessoa
-        ? { nome: pessoa.nome, email: pessoa.email, idade: pessoa.idade }
-        : { nome: '', email: '', idade: null })
+        ? { nome: pessoa.nome, cpfCnpj: pessoa.cpfCnpj, telefone: pessoa.telefone, email: pessoa.email }
+        : { nome: '', cpfCnpj: '', telefone: '', email: '' })
     tentouSalvar.value = false
-})
+}, { immediate: true })
+
+function aplicarMascaraCpfCnpj(evento) {
+    form.cpfCnpj = formatarCpfCnpj(evento.target.value)
+}
+
+function aplicarMascaraTelefone(evento) {
+    form.telefone = formatarTelefone(evento.target.value)
+}
 
 function formularioValido() {
-    return form.nome && form.email && form.idade
+    return form.nome && form.cpfCnpj && form.telefone && form.email
 }
 
 function salvar() {
@@ -42,37 +50,59 @@ function salvar() {
         emit('atualizar', props.pessoaEmEdicao.id, { ...form })
     else
         emit('cadastrar', { ...form })
-
-    Object.assign(form, { nome: '', email: '', idade: null })
-    tentouSalvar.value = false
 }
 
 function cancelar() {
-    emit('cancelar-edicao')
+    emit('cancelar')
 }
 </script>
 
 <template>
 
-    <form class="formulario" @submit.prevent="salvar">
+    <form novalidate @submit.prevent="salvar">
 
-        <div class="campo">
-            <InputText v-model="form.nome" placeholder="Nome" :invalid="tentouSalvar && !form.nome" />
-            <small v-if="tentouSalvar && !form.nome" class="erro-campo">Nome é obrigatório</small>
+        <div class="row">
+
+            <div class="col-12 mb-3">
+                <label for="nome" class="form-label">Nome Completo</label>
+                <input id="nome" v-model="form.nome" type="text" class="form-control"
+                    :class="{ 'is-invalid': tentouSalvar && !form.nome }" placeholder="Nome completo" />
+                <div class="invalid-feedback">Nome é obrigatório</div>
+            </div>
+
+            <div class="col-md-6 mb-3">
+                <label for="cpfCnpj" class="form-label">CPF/CNPJ</label>
+                <input id="cpfCnpj" :value="form.cpfCnpj" type="text" class="form-control"
+                    :class="{ 'is-invalid': tentouSalvar && !form.cpfCnpj }" placeholder="000.000.000-00"
+                    maxlength="18" @input="aplicarMascaraCpfCnpj" />
+                <div class="invalid-feedback">CPF/CNPJ é obrigatório</div>
+            </div>
+
+            <div class="col-md-6 mb-3">
+                <label for="telefone" class="form-label">Telefone</label>
+                <input id="telefone" :value="form.telefone" type="text" class="form-control"
+                    :class="{ 'is-invalid': tentouSalvar && !form.telefone }" placeholder="(00) 00000-0000"
+                    maxlength="15" @input="aplicarMascaraTelefone" />
+                <div class="invalid-feedback">Telefone é obrigatório</div>
+            </div>
+
+            <div class="col-12 mb-3">
+                <label for="email" class="form-label">E-mail</label>
+                <input id="email" v-model="form.email" type="email" class="form-control"
+                    :class="{ 'is-invalid': tentouSalvar && !form.email }" placeholder="nome@exemplo.com" />
+                <div class="invalid-feedback">E-mail é obrigatório</div>
+            </div>
+
         </div>
 
-        <div class="campo">
-            <InputText v-model="form.email" type="email" placeholder="E-mail" :invalid="tentouSalvar && !form.email" />
-            <small v-if="tentouSalvar && !form.email" class="erro-campo">E-mail é obrigatório</small>
+        <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-primary">
+                {{ pessoaEmEdicao ? 'Salvar' : 'Cadastrar' }}
+            </button>
+            <button type="button" class="btn btn-outline-secondary" @click="cancelar">
+                Cancelar
+            </button>
         </div>
-
-        <div class="campo">
-            <InputNumber v-model="form.idade" placeholder="Idade" :min="0" :invalid="tentouSalvar && !form.idade" />
-            <small v-if="tentouSalvar && !form.idade" class="erro-campo">Idade é obrigatória</small>
-        </div>
-
-        <Button type="submit" :label="pessoaEmEdicao ? 'Salvar' : 'Cadastrar'" />
-        <Button v-if="pessoaEmEdicao" type="button" label="Cancelar" severity="secondary" outlined @click="cancelar" />
 
     </form>
 

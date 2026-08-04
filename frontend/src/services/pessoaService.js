@@ -8,6 +8,10 @@ export function listarPessoas() {
     return api.get('/pessoas')
 }
 
+export function buscarPessoaPorId(id) {
+    return api.get(`/pessoas/${id}`)
+}
+
 export function cadastrarPessoa(pessoa) {
     return api.post('/pessoas', pessoa)
 }

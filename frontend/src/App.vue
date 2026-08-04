@@ -1,7 +1,10 @@
 <script setup>
-import Home from '@/pages/Home.vue';
+import AppFooter from '@/components/AppFooter.vue'
 </script>
 
 <template>
-  <Home />
+  <div class="container py-4">
+    <RouterView />
+    <AppFooter />
+  </div>
 </template>
