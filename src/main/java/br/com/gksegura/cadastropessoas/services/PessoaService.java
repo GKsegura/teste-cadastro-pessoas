@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 import br.com.gksegura.cadastropessoas.dtos.PessoaRequestDTO;
 import br.com.gksegura.cadastropessoas.dtos.PessoaResponseDTO;
 import br.com.gksegura.cadastropessoas.entities.Pessoa;
+import br.com.gksegura.cadastropessoas.exceptions.RecursoDuplicadoException;
 import br.com.gksegura.cadastropessoas.exceptions.RecursoNaoEncontradoException;
 import br.com.gksegura.cadastropessoas.repositories.PessoaRepository;
 
@@ -20,7 +21,10 @@ public class PessoaService {
     }
 
     public PessoaResponseDTO cadastrar(PessoaRequestDTO dto) {
-        Pessoa pessoa = new Pessoa(dto.nome(), dto.email(), dto.idade());
+        if (repository.existsByCpfCnpj(dto.cpfCnpj())) {
+            throw new RecursoDuplicadoException("Já existe uma pessoa cadastrada com o CPF/CNPJ " + dto.cpfCnpj());
+        }
+        Pessoa pessoa = new Pessoa(dto.nome(), dto.cpfCnpj(), dto.telefone(), dto.email());
         Pessoa salva = repository.save(pessoa);
         return PessoaResponseDTO.fromEntity(salva);
     }
@@ -32,12 +36,24 @@ public class PessoaService {
                 .toList();
     }
 
+    public PessoaResponseDTO buscarPorId(Long id) {
+        Pessoa pessoa = repository.findById(id)
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Pessoa com id " + id + " não encontrada"));
+        return PessoaResponseDTO.fromEntity(pessoa);
+    }
+
     public PessoaResponseDTO atualizar(Long id, PessoaRequestDTO dto) {
         Pessoa pessoa = repository.findById(id)
                 .orElseThrow(() -> new RecursoNaoEncontradoException("Pessoa com id " + id + " não encontrada"));
+
+        if (repository.existsByCpfCnpjAndIdNot(dto.cpfCnpj(), id)) {
+            throw new RecursoDuplicadoException("Já existe uma pessoa cadastrada com o CPF/CNPJ " + dto.cpfCnpj());
+        }
+
         pessoa.setNome(dto.nome());
+        pessoa.setCpfCnpj(dto.cpfCnpj());
+        pessoa.setTelefone(dto.telefone());
         pessoa.setEmail(dto.email());
-        pessoa.setIdade(dto.idade());
         Pessoa atualizada = repository.save(pessoa);
         return PessoaResponseDTO.fromEntity(atualizada);
     }

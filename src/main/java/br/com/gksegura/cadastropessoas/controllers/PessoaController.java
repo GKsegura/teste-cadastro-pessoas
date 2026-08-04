@@ -39,6 +39,11 @@ public class PessoaController {
         return ResponseEntity.ok(service.listar());
     }
 
+    @GetMapping("/{id}")
+    public ResponseEntity<PessoaResponseDTO> buscarPorId(@PathVariable Long id) {
+        return ResponseEntity.ok(service.buscarPorId(id));
+    }
+
     @PutMapping("/{id}")
     public ResponseEntity<PessoaResponseDTO> atualizar(@PathVariable Long id,
             @Valid @RequestBody PessoaRequestDTO dto) {
