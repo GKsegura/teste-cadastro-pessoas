@@ -1,7 +1,7 @@
 package br.com.gksegura.cadastropessoas.services;
 
-import java.util.List;
-
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import br.com.gksegura.cadastropessoas.dtos.PessoaRequestDTO;
@@ -36,11 +36,11 @@ public class PessoaService {
         return repository.existsByCpfCnpj(cpfCnpj);
     }
 
-    public List<PessoaResponseDTO> listar() {
-        return repository.findAll()
-                .stream()
-                .map(PessoaResponseDTO::fromEntity)
-                .toList();
+    public Page<PessoaResponseDTO> listar(String busca, Pageable pageable) {
+        Page<Pessoa> pagina = (busca == null || busca.isBlank())
+                ? repository.findAll(pageable)
+                : repository.findByNomeContainingIgnoreCaseOrCpfCnpjContainingIgnoreCase(busca, busca, pageable);
+        return pagina.map(PessoaResponseDTO::fromEntity);
     }
 
     public PessoaResponseDTO buscarPorId(Long id) {

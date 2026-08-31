@@ -1,7 +1,8 @@
 package br.com.gksegura.cadastropessoas.controllers;
 
-import java.util.List;
-
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
+import org.springframework.data.web.PagedModel;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -36,8 +37,10 @@ public class PessoaController {
     }
 
     @GetMapping
-    public ResponseEntity<List<PessoaResponseDTO>> listar() {
-        return ResponseEntity.ok(service.listar());
+    public ResponseEntity<PagedModel<PessoaResponseDTO>> listar(
+            @RequestParam(required = false) String busca,
+            @PageableDefault(size = 10, sort = "nome") Pageable pageable) {
+        return ResponseEntity.ok(new PagedModel<>(service.listar(busca, pageable)));
     }
 
     @GetMapping("/existe-cpf-cnpj")

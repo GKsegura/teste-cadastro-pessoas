@@ -17,7 +17,7 @@ como teste técnico para a vaga de Desenvolvedor Júnior (Java + Vue.js).
 
 - Vue 3 (Composition API) · Vite · Vue Router
 - Bootstrap 5
-- Axios · vue-toastification
+- Axios · vue-toastification · maska (máscara de CPF/CNPJ e telefone)
 
 ## Pré-requisitos
 
@@ -59,7 +59,7 @@ A aplicação abre em `http://localhost:5174`.
 | Método | Rota            | Descrição            | Sucesso | Erros                                                    |
 | ------ | --------------- | --------------------- | ------- | --------------------------------------------------------- |
 | POST   | `/pessoas`      | Cadastra uma pessoa   | 201     | 400 (validação), 409 (CPF/CNPJ já cadastrado)            |
-| GET    | `/pessoas`      | Lista as pessoas      | 200     | -                                                          |
+| GET    | `/pessoas`      | Lista as pessoas, paginada, com busca opcional por nome/CPF (params `busca`, `page`, `size`) | 200 | - |
 | GET    | `/pessoas/{id}` | Busca uma pessoa      | 200     | 404 (id inexistente)                                       |
 | PUT    | `/pessoas/{id}` | Atualiza uma pessoa   | 200     | 400 (validação), 404 (id inexistente), 409 (CPF/CNPJ já cadastrado) |
 | DELETE | `/pessoas/{id}` | Exclui uma pessoa     | 204     | 404 (id inexistente)                                       |
@@ -150,13 +150,32 @@ e não aceita duplicidade. Erros de validação retornam `400` com um mapa
   teste. Cruzar nome e CPF de terceiros sem base legal também esbarra na
   LGPD. A validação de CPF/CNPJ ficou restrita ao dígito verificador
   (`@CpfOuCnpj`).
-
-## Possíveis evoluções
-
-- Testes unitários no service (JUnit + Mockito)
-- Busca por nome/CPF e paginação na listagem
-- Máscara de CPF/CNPJ e telefone com uma lib dedicada (hoje é formatação
-  manual em `utils/mascaras.js`)
+- **Busca e paginação no backend, não no frontend**: `GET /pessoas` aceita
+  `busca` (casa com nome ou CPF/CNPJ, via
+  `findByNomeContainingIgnoreCaseOrCpfCnpjContainingIgnoreCase`), `page` e
+  `size`, devolvendo `Page` do Spring Data serializado como `PagedModel`
+  (`{ content, page: { size, number, totalElements, totalPages } }`). Filtrar
+  e paginar no banco evita trafegar e reprocessar a lista inteira a cada
+  busca - decisão que só importa em escala, mas é o padrão correto do Spring
+  Data e não tem custo extra de implementação.
+- **maska para as máscaras de CPF/CNPJ e telefone** (`v-maska`, em
+  `PessoaForm.vue`): substituiu a formatação manual em regex de
+  `utils/mascaras.js`. Suporta máscara dinâmica (array de padrões) e escolhe
+  automaticamente o padrão que cabe no que foi digitado - por isso o mesmo
+  campo alterna corretamente entre CPF (11 dígitos) e CNPJ (14 dígitos), e
+  entre telefone fixo (10 dígitos) e celular (11 dígitos), sem lógica
+  condicional própria. Biblioteca pequena (~3kb), sem dependências e com
+  integração nativa a `v-model`.
+- **Testes unitários do `PessoaService`** (JUnit 5 + Mockito, em
+  `PessoaServiceTest`): repositório mockado para cobrir as regras de negócio
+  isoladas de banco - cadastro/atualização bloqueados por CPF/CNPJ duplicado,
+  busca por id inexistente, e os dois caminhos de `existeCpfCnpj` (com e sem
+  `idIgnorar`). Rodar com `./mvnw test` exigiu registrar o Mockito como
+  `-javaagent` explícito no `maven-surefire-plugin` (via
+  `maven-dependency-plugin:properties`, que expõe o caminho do jar do
+  Mockito como propriedade Maven): no Java 25 a JVM não permite mais que o
+  Mockito se auto-anexe como agente em tempo de execução, então o mock maker
+  inline falha ao inicializar sem esse `-javaagent` no `argLine`.
 
 ---
 

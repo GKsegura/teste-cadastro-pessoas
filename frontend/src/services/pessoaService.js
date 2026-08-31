@@ -4,8 +4,8 @@ const api = axios.create({
     baseURL: import.meta.env.VITE_API_URL
 })
 
-export function listarPessoas() {
-    return api.get('/pessoas')
+export function listarPessoas({ busca, page = 0, size = 10 } = {}) {
+    return api.get('/pessoas', { params: { busca: busca || undefined, page, size } })
 }
 
 export function buscarPessoaPorId(id) {

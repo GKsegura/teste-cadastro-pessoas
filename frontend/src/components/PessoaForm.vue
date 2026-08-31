@@ -1,8 +1,11 @@
 <script setup>
+import { vMaska } from 'maska/vue'
 import { reactive, ref, watch } from 'vue'
 
 import { verificarCpfCnpjExistente } from '@/services/pessoaService'
-import { formatarCpfCnpj, formatarTelefone } from '@/utils/mascaras'
+
+const mascaraCpfCnpj = { mask: ['###.###.###-##', '##.###.###/####-##'] }
+const mascaraTelefone = { mask: ['(##) ####-####', '(##) #####-####'] }
 
 const props = defineProps({
     pessoaEmEdicao: {
@@ -35,11 +38,6 @@ watch(() => props.pessoaEmEdicao, (pessoa) => {
     cpfCnpjDuplicado.value = false
 }, { immediate: true })
 
-function aplicarMascaraCpfCnpj(evento) {
-    form.cpfCnpj = formatarCpfCnpj(evento.target.value)
-    agendarVerificacaoCpfCnpj()
-}
-
 function agendarVerificacaoCpfCnpj() {
     clearTimeout(timeoutVerificacao)
     cpfCnpjDuplicado.value = false
@@ -68,10 +66,6 @@ async function verificarCpfCnpj(cpfCnpj) {
             verificandoCpfCnpj.value = false
         }
     }
-}
-
-function aplicarMascaraTelefone(evento) {
-    form.telefone = formatarTelefone(evento.target.value)
 }
 
 function formularioValido() {
@@ -110,9 +104,9 @@ function cancelar() {
 
             <div class="col-md-6 mb-3">
                 <label for="cpfCnpj" class="form-label">CPF/CNPJ</label>
-                <input id="cpfCnpj" :value="form.cpfCnpj" type="text" class="form-control"
+                <input id="cpfCnpj" v-model="form.cpfCnpj" v-maska="mascaraCpfCnpj" type="text" class="form-control"
                     :class="{ 'is-invalid': (tentouSalvar && !form.cpfCnpj) || cpfCnpjDuplicado }"
-                    placeholder="000.000.000-00" maxlength="18" @input="aplicarMascaraCpfCnpj" />
+                    placeholder="000.000.000-00" @input="agendarVerificacaoCpfCnpj" />
                 <div class="form-text" v-if="verificandoCpfCnpj">Verificando...</div>
                 <div class="invalid-feedback" v-if="cpfCnpjDuplicado">Este CPF/CNPJ já está cadastrado</div>
                 <div class="invalid-feedback" v-else>CPF/CNPJ é obrigatório</div>
@@ -120,9 +114,8 @@ function cancelar() {
 
             <div class="col-md-6 mb-3">
                 <label for="telefone" class="form-label">Telefone</label>
-                <input id="telefone" :value="form.telefone" type="text" class="form-control"
-                    :class="{ 'is-invalid': tentouSalvar && !form.telefone }" placeholder="(00) 00000-0000"
-                    maxlength="15" @input="aplicarMascaraTelefone" />
+                <input id="telefone" v-model="form.telefone" v-maska="mascaraTelefone" type="text" class="form-control"
+                    :class="{ 'is-invalid': tentouSalvar && !form.telefone }" placeholder="(00) 00000-0000" />
                 <div class="invalid-feedback">Telefone é obrigatório</div>
             </div>
 
