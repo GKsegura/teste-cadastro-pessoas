@@ -16,6 +16,10 @@ export function cadastrarPessoa(pessoa) {
     return api.post('/pessoas', pessoa)
 }
 
+export function verificarCpfCnpjExistente(cpfCnpj, idIgnorar) {
+    return api.get('/pessoas/existe-cpf-cnpj', { params: { cpfCnpj, idIgnorar } })
+}
+
 export function excluirPessoa(id) {
     return api.delete(`/pessoas/${id}`)
 }

@@ -63,6 +63,7 @@ A aplicação abre em `http://localhost:5174`.
 | GET    | `/pessoas/{id}` | Busca uma pessoa      | 200     | 404 (id inexistente)                                       |
 | PUT    | `/pessoas/{id}` | Atualiza uma pessoa   | 200     | 400 (validação), 404 (id inexistente), 409 (CPF/CNPJ já cadastrado) |
 | DELETE | `/pessoas/{id}` | Exclui uma pessoa     | 204     | 404 (id inexistente)                                       |
+| GET    | `/pessoas/existe-cpf-cnpj` | Verifica se um CPF/CNPJ já está cadastrado (params `cpfCnpj`, `idIgnorar` opcional) | 200 (`true`/`false`) | -   |
 
 ![Documentação Swagger](docs/swagger.png)
 
@@ -130,6 +131,25 @@ e não aceita duplicidade. Erros de validação retornam `400` com um mapa
   alternar componentes na mesma tela) é mais fiel ao requisito e permite
   acessar a edição de uma pessoa diretamente pela URL (usa
   `GET /pessoas/{id}` para carregar os dados nesse caso).
+- **Verificação de CPF/CNPJ duplicado em tempo real** (`GET
+  /pessoas/existe-cpf-cnpj`): o frontend chama esse endpoint com debounce
+  assim que o campo CPF/CNPJ é preenchido por completo (11 ou 14 dígitos),
+  avisando o usuário antes do envio. No modo de edição, o parâmetro opcional
+  `idIgnorar` exclui a própria pessoa da checagem (reaproveita
+  `existsByCpfCnpjAndIdNot`, já usado em `atualizar`). É só uma otimização de
+  UX - o backend continua validando a duplicidade no `POST`/`PUT` e retornando
+  `409`, então a checagem prévia falhar silenciosamente (rede indisponível,
+  etc.) não compromete a integridade dos dados.
+- **Validação de nome × CPF/CNPJ avaliada e descartada**: não existe base
+  gratuita ou pública para confirmar que um nome corresponde a um CPF. A
+  Receita Federal não expõe API para isso (o serviço público exige CPF + data
+  de nascimento, tem captcha e devolve o nome mascarado, sem aceitar um nome
+  como entrada para conferência); provedores como Serpro (Datavalid),
+  Assertiva ou BigDataCorp oferecem esse tipo de consulta, mas são pagos por
+  requisição, exigem contrato/CNPJ e são desproporcionais ao escopo deste
+  teste. Cruzar nome e CPF de terceiros sem base legal também esbarra na
+  LGPD. A validação de CPF/CNPJ ficou restrita ao dígito verificador
+  (`@CpfOuCnpj`).
 
 ## Possíveis evoluções
 

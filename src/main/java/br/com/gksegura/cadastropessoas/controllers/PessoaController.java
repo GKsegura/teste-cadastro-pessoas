@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import br.com.gksegura.cadastropessoas.dtos.PessoaRequestDTO;
@@ -37,6 +38,12 @@ public class PessoaController {
     @GetMapping
     public ResponseEntity<List<PessoaResponseDTO>> listar() {
         return ResponseEntity.ok(service.listar());
+    }
+
+    @GetMapping("/existe-cpf-cnpj")
+    public ResponseEntity<Boolean> existeCpfCnpj(@RequestParam String cpfCnpj,
+            @RequestParam(required = false) Long idIgnorar) {
+        return ResponseEntity.ok(service.existeCpfCnpj(cpfCnpj, idIgnorar));
     }
 
     @GetMapping("/{id}")

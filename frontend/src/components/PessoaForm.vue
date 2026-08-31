@@ -1,6 +1,7 @@
 <script setup>
 import { reactive, ref, watch } from 'vue'
 
+import { verificarCpfCnpjExistente } from '@/services/pessoaService'
 import { formatarCpfCnpj, formatarTelefone } from '@/utils/mascaras'
 
 const props = defineProps({
@@ -20,16 +21,53 @@ const form = reactive({
 })
 
 const tentouSalvar = ref(false)
+const cpfCnpjDuplicado = ref(false)
+const verificandoCpfCnpj = ref(false)
+
+let timeoutVerificacao = null
+let requisicaoAtual = 0
 
 watch(() => props.pessoaEmEdicao, (pessoa) => {
     Object.assign(form, pessoa
         ? { nome: pessoa.nome, cpfCnpj: pessoa.cpfCnpj, telefone: pessoa.telefone, email: pessoa.email }
         : { nome: '', cpfCnpj: '', telefone: '', email: '' })
     tentouSalvar.value = false
+    cpfCnpjDuplicado.value = false
 }, { immediate: true })
 
 function aplicarMascaraCpfCnpj(evento) {
     form.cpfCnpj = formatarCpfCnpj(evento.target.value)
+    agendarVerificacaoCpfCnpj()
+}
+
+function agendarVerificacaoCpfCnpj() {
+    clearTimeout(timeoutVerificacao)
+    cpfCnpjDuplicado.value = false
+
+    const digitos = form.cpfCnpj.replace(/\D/g, '')
+    if (digitos.length !== 11 && digitos.length !== 14) {
+        verificandoCpfCnpj.value = false
+        return
+    }
+
+    verificandoCpfCnpj.value = true
+    timeoutVerificacao = setTimeout(() => verificarCpfCnpj(form.cpfCnpj), 500)
+}
+
+async function verificarCpfCnpj(cpfCnpj) {
+    const idDaRequisicao = ++requisicaoAtual
+    try {
+        const resposta = await verificarCpfCnpjExistente(cpfCnpj, props.pessoaEmEdicao?.id)
+        if (idDaRequisicao === requisicaoAtual) {
+            cpfCnpjDuplicado.value = resposta.data
+        }
+    } catch {
+        // falha na verificação prévia não bloqueia o cadastro; o backend valida no envio
+    } finally {
+        if (idDaRequisicao === requisicaoAtual) {
+            verificandoCpfCnpj.value = false
+        }
+    }
 }
 
 function aplicarMascaraTelefone(evento) {
@@ -37,7 +75,7 @@ function aplicarMascaraTelefone(evento) {
 }
 
 function formularioValido() {
-    return form.nome && form.cpfCnpj && form.telefone && form.email
+    return form.nome && form.cpfCnpj && form.telefone && form.email && !cpfCnpjDuplicado.value
 }
 
 function salvar() {
@@ -73,9 +111,11 @@ function cancelar() {
             <div class="col-md-6 mb-3">
                 <label for="cpfCnpj" class="form-label">CPF/CNPJ</label>
                 <input id="cpfCnpj" :value="form.cpfCnpj" type="text" class="form-control"
-                    :class="{ 'is-invalid': tentouSalvar && !form.cpfCnpj }" placeholder="000.000.000-00"
-                    maxlength="18" @input="aplicarMascaraCpfCnpj" />
-                <div class="invalid-feedback">CPF/CNPJ é obrigatório</div>
+                    :class="{ 'is-invalid': (tentouSalvar && !form.cpfCnpj) || cpfCnpjDuplicado }"
+                    placeholder="000.000.000-00" maxlength="18" @input="aplicarMascaraCpfCnpj" />
+                <div class="form-text" v-if="verificandoCpfCnpj">Verificando...</div>
+                <div class="invalid-feedback" v-if="cpfCnpjDuplicado">Este CPF/CNPJ já está cadastrado</div>
+                <div class="invalid-feedback" v-else>CPF/CNPJ é obrigatório</div>
             </div>
 
             <div class="col-md-6 mb-3">

@@ -29,6 +29,13 @@ public class PessoaService {
         return PessoaResponseDTO.fromEntity(salva);
     }
 
+    public boolean existeCpfCnpj(String cpfCnpj, Long idIgnorar) {
+        if (idIgnorar != null) {
+            return repository.existsByCpfCnpjAndIdNot(cpfCnpj, idIgnorar);
+        }
+        return repository.existsByCpfCnpj(cpfCnpj);
+    }
+
     public List<PessoaResponseDTO> listar() {
         return repository.findAll()
                 .stream()
